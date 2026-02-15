@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card shadow-lg p-4 mx-auto" style="max-width:750px;">
+
+    <h3 class="text-center mb-3">Complaint Details</h3>
+
+    <p><b>ID:</b> {{complaint.complaint_id}}</p>
+    <p><b>Raised By:</b> {{complaint.raised_by}} ({{complaint.user_role}})</p>
+
+    <p><b>Category:</b> {{complaint.category}}</p>
+    <p><b>Priority:</b> {{complaint.priority}}</p>
+
+    <p><b>Status:</b>
+        <span class="badge bg-info">{{complaint.status}}</span>
+    </p>
+
+    <p><b>SLA Deadline:</b>
+        {% if complaint.sla_deadline %}
+            {{complaint.sla_deadline}}
+        {% else %}
+            Not Assigned Yet
+        {% endif %}
+    </p>
+
+    <hr>
+
+    <h5>Description:</h5>
+    <p>{{complaint.description}}</p>
+
+    <hr>
+
+    <h5>Staff Remarks:</h5>
+    {% if complaint.remarks %}
+        <p class="text-success">{{complaint.remarks}}</p>
+    {% else %}
+        <p class="text-muted">No remarks yet.</p>
+    {% endif %}
+
+    <a href="/dashboard" class="btn btn-secondary mt-3">
+        Back
+    </a>
+
+</div>
+
+{% endblock %}

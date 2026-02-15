@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="card shadow-lg p-4 mx-auto" style="max-width:600px;">
+    <h3 class="text-center">Raise a Complaint</h3>
+
+    <form method="POST">
+
+        <label class="mt-2">Category</label>
+        <select name="category" class="form-control" required>
+            <option>Hostel</option>
+            <option>Academic Infrastructure</option>
+            <option>IT Services</option>
+            <option>Administration</option>
+        </select>
+
+        <label class="mt-3">Priority</label>
+        <select name="priority" class="form-control" required>
+            <option>Low</option>
+            <option selected>Medium</option>
+            <option>High</option>
+        </select>
+
+        <label class="mt-3">Description</label>
+        <textarea name="description" class="form-control" rows="4" required></textarea>
+
+        <button class="btn btn-success w-100 mt-4">
+            Submit Complaint
+        </button>
+    </form>
+</div>
+
+{% endblock %}

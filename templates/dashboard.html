@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2 class="mb-2">Welcome {{name}} 👋</h2>
+    <h5 class="text-muted">Role: {{role}}</h5>
+
+    <hr>
+    {% if role == "student" or role == "faculty" %}
+
+        <h4>{{role.capitalize()}} Dashboard</h4>
+
+        <a href="/submit_complaint" class="btn btn-primary mt-2">
+            Raise Complaint
+        </a>
+
+        <a href="/my_complaints" class="btn btn-secondary mt-2">
+            Track My Complaints
+        </a>
+
+        <a href="/notifications" class="btn btn-dark mt-2">
+            View Notifications
+        </a>
+
+    {% elif role == "admin" %}
+
+        <h4>Admin Dashboard</h4>
+
+        <a href="/admin_panel" class="btn btn-warning mt-2">
+            View & Assign Complaints
+        </a>
+
+        <a href="/notifications" class="btn btn-dark mt-2">
+            View Notifications
+        </a>
+
+    {% elif role == "staff" %}
+
+        <h4>Staff Dashboard</h4>
+
+        <a href="/staff_panel" class="btn btn-info mt-2">
+            View Assigned Complaints
+        </a>
+
+        <a href="/notifications" class="btn btn-dark mt-2">
+            View Notifications
+        </a>
+
+    {% endif %}
+
+    <hr>
+
+    <a href="/logout" class="btn btn-danger mt-2">
+        Logout
+    </a>
+
+</div>
+
+{% endblock %}

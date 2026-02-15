@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>Admin Panel - Complaint Management</h3>
+<hr>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Raised By</th>
+            <th>Role</th>
+            <th>Category</th>
+            <th>Priority</th>
+            <th>Status</th>
+            <th>SLA Deadline</th>
+            <th>Details</th>
+            <th>Assign Staff</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for c in complaints %}
+        <tr>
+            <td>{{c.complaint_id}}</td>
+            <td>{{c.raised_by}}</td>
+            <td>{{c.user_role}}</td>
+            <td>{{c.category}}</td>
+            <td>{{c.priority}}</td>
+
+            <td>
+                <span class="badge bg-secondary">{{c.status}}</span>
+            </td>
+            <td>
+                {% if c.sla_deadline %}
+                    {{c.sla_deadline}}
+                {% else %}
+                    Not Set
+                {% endif %}
+            </td>
+            <td>
+                <a href="/complaint/{{c.complaint_id}}" class="btn btn-sm btn-primary">
+                    View Details
+                </a>
+            </td>
+            <td>
+                {% if c.status == "New" %}
+                <form method="POST" action="/assign_complaint/{{c.complaint_id}}">
+
+                    <select name="staff_id" required>
+                        {% for s in staff_list %}
+                        <option value="{{s.user_id}}">
+                            {{s.name}}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <input type="date" name="deadline" required>
+
+                    <button class="btn btn-sm btn-success mt-1">
+                        Assign
+                    </button>
+                </form>
+                {% else %}
+                    Assigned
+                {% endif %}
+            </td>
+
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="/dashboard" class="btn btn-secondary mt-3">Back</a>
+
+{% endblock %}

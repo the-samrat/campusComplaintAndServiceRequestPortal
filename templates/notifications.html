@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>Notifications</h3>
+<hr>
+
+{% if notes|length == 0 %}
+    <p>No notifications yet.</p>
+{% else %}
+<ul class="list-group">
+    {% for n in notes %}
+    <li class="list-group-item">
+        {{n.message}}
+        <br>
+        <small class="text-muted">{{n.created_at}}</small>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+<a href="/dashboard" class="btn btn-secondary mt-3">Back</a>
+
+{% endblock %}
