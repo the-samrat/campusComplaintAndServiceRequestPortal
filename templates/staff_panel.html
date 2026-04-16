@@ -1,65 +1,142 @@
 {% extends "base.html" %}
+
+{% block title %}My Assignments — Campus Portal{% endblock %}
+{% block page_title %}My Assignments{% endblock %}
+{% block page_subtitle %}Complaints assigned to you{% endblock %}
+
 {% block content %}
 
-<h3>Staff Panel - Assigned Complaints</h3>
-<hr>
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Assigned Complaints</h2>
+        <p class="page-subtitle">{{ assigned_complaints|length }} assignment{{ 's' if assigned_complaints|length != 1 }}</p>
+    </div>
+</div>
+
+<div class="filter-bar" style="margin-bottom:20px;">
+    <form method="GET" action="/staff_panel" style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <select class="form-select" name="status" id="staff-status-filter"
+                onchange="this.form.submit()" style="min-width:160px;">
+            <option value="" {% if not status_filter %}selected{% endif %}>All Assignments</option>
+            <option value="Assigned" {% if status_filter == 'Assigned' %}selected{% endif %}>Assigned</option>
+            <option value="In Progress" {% if status_filter == 'In Progress' %}selected{% endif %}>In Progress</option>
+            <option value="Resolved" {% if status_filter == 'Resolved' %}selected{% endif %}>Resolved</option>
+            <option value="Closed" {% if status_filter == 'Closed' %}selected{% endif %}>Closed</option>
+        </select>
+        {% if status_filter %}
+        <a href="/staff_panel" class="btn btn-secondary btn-sm">Clear</a>
+        {% endif %}
+    </form>
+</div>
 
 {% if assigned_complaints|length == 0 %}
-    <p>No complaints assigned yet.</p>
+<div class="card">
+    <div class="empty-state">
+        <div class="empty-icon">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M4.22 4.22l2.83 2.83m9.9 9.9 2.83 2.83M1 12h4m14 0h4M4.22 19.78l2.83-2.83m9.9-9.9 2.83-2.83"/></svg>
+        </div>
+        <h3>No Assignments Found</h3>
+        <p>{% if status_filter %}No complaints with status "{{ status_filter }}".{% else %}You have not been assigned any complaints yet.{% endif %}</p>
+        {% if status_filter %}
+        <a href="/staff_panel" class="btn btn-secondary">View All</a>
+        {% endif %}
+    </div>
+</div>
 {% else %}
 
-<table class="table table-bordered table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>Category</th>
-            <th>Priority</th>
-            <th>Status</th>
-            <th>Details</th>
-            <th>Update Status</th>
-        </tr>
-    </thead>
+<div style="display:flex; flex-direction:column; gap:16px;" id="staff-assignments">
+    {% for c in assigned_complaints %}
+    <div class="card {% if c.overdue %}card-overdue{% endif %}" id="assignment-{{ c.complaint_id }}">
+        <div class="card-header">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <span style="font-weight:700; color:var(--text-muted);">#{{ c.complaint_id }}</span>
+                <span style="font-weight:600;">{{ c.category }}</span>
+                <span class="badge
+                    {% if c.priority == 'High' %}badge-high
+                    {% elif c.priority == 'Medium' %}badge-medium
+                    {% else %}badge-low{% endif %}">
+                    {{ c.priority }}
+                </span>
+                <span class="badge
+                    {% if c.status == 'Assigned' %}badge-assigned
+                    {% elif c.status == 'In Progress' %}badge-progress
+                    {% elif c.status == 'Resolved' %}badge-resolved
+                    {% else %}badge-closed{% endif %}">
+                    {{ c.status }}
+                </span>
+                {% if c.overdue %}
+                <span class="badge badge-overdue">Overdue</span>
+                {% endif %}
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-shrink:0;">
+                {% if c.sla_deadline %}
+                <span style="font-size:12px; color:{% if c.overdue %}var(--danger){% else %}var(--text-muted){% endif %};">
+                    {{ c.sla_deadline | fmt_date }}
+                </span>
+                {% endif %}
+                <a href="/complaint/{{ c.complaint_id }}" class="btn btn-sm btn-secondary"
+                   id="view-assign-{{ c.complaint_id }}">View</a>
+            </div>
+        </div>
 
-    <tbody>
-        {% for c in assigned_complaints %}
-        <tr>
-            <td>{{c.complaint_id}}</td>
-            <td>{{c.category}}</td>
-            <td>{{c.priority}}</td>
+        <div class="card-body">
+            {% if c.description %}
+            <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px; line-height:1.6;">
+                {{ c.description[:220] }}{% if c.description|length > 220 %}...{% endif %}
+            </p>
+            {% endif %}
 
-            <td>
-                <span class="badge bg-info">{{c.status}}</span>
-            </td>
+            {% if c.room_number or c.building_name %}
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+                {% if c.building_name %}{{ c.building_name }}{% endif %}
+                {% if c.room_number %} · Room {{ c.room_number }}{% endif %}
+            </div>
+            {% endif %}
 
-            <td>
-                <a href="/complaint/{{c.complaint_id}}" class="btn btn-sm btn-primary">
-                    View Details
-                </a>
-            </td>
-            <td>
-                <form method="POST" action="/update_status/{{c.complaint_id}}">
-                    
-                    <select name="status" class="form-control mb-2" required>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Resolved">Resolved</option>
-                        <option value="Closed">Closed</option>
-                    </select>
+            {% set next_statuses = valid_transitions[c.status] if c.status in valid_transitions else [] %}
 
-                    <textarea name="remarks" class="form-control mb-2"
-                              placeholder="Add remarks..." rows="2"></textarea>
-
-                    <button class="btn btn-sm btn-success w-100">
-                        Update
-                    </button>
+            {% if next_statuses %}
+            <div style="border-top:1px solid var(--border); padding-top:16px; margin-top:4px;">
+                <div style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-muted); margin-bottom:12px;">
+                    Update Status
+                </div>
+                <form method="POST" action="/update_status/{{ c.complaint_id }}"
+                      id="update-form-{{ c.complaint_id }}" class="submit-once">
+                    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                    <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:flex-end;">
+                        <div style="flex:1; min-width:150px;">
+                            <select name="status" class="form-select" required>
+                                {% for ns in next_statuses %}
+                                <option value="{{ ns }}">{{ ns }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div style="flex:2; min-width:200px;">
+                            <textarea name="remarks" class="form-control" rows="2"
+                                      placeholder="Add resolution notes...">{{ c.remarks or '' }}</textarea>
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn-success"
+                                    id="update-btn-{{ c.complaint_id }}">
+                                <span class="btn-spinner"></span>
+                                <span class="btn-text">Update</span>
+                            </button>
+                        </div>
+                    </div>
                 </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
+            </div>
+            {% elif c.status == 'Closed' %}
+            <div style="border-top:1px solid var(--border); padding-top:14px; margin-top:4px;">
+                <span style="font-size:13px; color:var(--text-muted);">This complaint is closed and cannot be modified.</span>
+                {% if c.remarks %}
+                <div class="detail-remarks" style="margin-top:10px;">{{ c.remarks }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
 {% endif %}
-
-<a href="/dashboard" class="btn btn-secondary mt-3">Back</a>
 
 {% endblock %}

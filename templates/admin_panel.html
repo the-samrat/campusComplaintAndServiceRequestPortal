@@ -1,75 +1,200 @@
 {% extends "base.html" %}
+
+{% block title %}Admin Panel — Campus Portal{% endblock %}
+{% block page_title %}Admin Panel{% endblock %}
+{% block page_subtitle %}Manage and assign all campus complaints{% endblock %}
+
 {% block content %}
 
-<h3>Admin Panel - Complaint Management</h3>
-<hr>
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Complaint Management</h2>
+        <p class="page-subtitle">
+            {{ total_count }} complaint{{ 's' if total_count != 1 }}
+            {% if status_filter %}, Filtered: {{ status_filter }}{% endif %}
+            {% if search_q %}, Search: "{{ search_q }}"{% endif %}
+        </p>
+    </div>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <a href="/reports" class="btn btn-secondary" id="admin-reports-link">Reports</a>
+        <a href="/audit_logs" class="btn btn-secondary" id="admin-audit-link">Audit Logs</a>
+    </div>
+</div>
 
-<table class="table table-bordered table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>Raised By</th>
-            <th>Role</th>
-            <th>Category</th>
-            <th>Priority</th>
-            <th>Status</th>
-            <th>SLA Deadline</th>
-            <th>Details</th>
-            <th>Assign Staff</th>
-        </tr>
-    </thead>
+<div class="filter-bar">
+    <form method="GET" action="/admin_panel" id="filter-form"
+          style="display:flex; gap:10px; flex-wrap:wrap; flex:1; align-items:center;">
 
-    <tbody>
-        {% for c in complaints %}
-        <tr>
-            <td>{{c.complaint_id}}</td>
-            <td>{{c.raised_by}}</td>
-            <td>{{c.user_role}}</td>
-            <td>{{c.category}}</td>
-            <td>{{c.priority}}</td>
+        <div class="search-bar" style="flex:1; min-width:200px; max-width:340px;">
+            <span class="search-icon">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </span>
+            <input type="text" name="q" id="search-input" value="{{ search_q }}"
+                   placeholder="Search by user, category, description...">
+        </div>
 
-            <td>
-                <span class="badge bg-secondary">{{c.status}}</span>
-            </td>
-            <td>
-                {% if c.sla_deadline %}
-                    {{c.sla_deadline}}
-                {% else %}
-                    Not Set
-                {% endif %}
-            </td>
-            <td>
-                <a href="/complaint/{{c.complaint_id}}" class="btn btn-sm btn-primary">
-                    View Details
-                </a>
-            </td>
-            <td>
-                {% if c.status == "New" %}
-                <form method="POST" action="/assign_complaint/{{c.complaint_id}}">
+        <select class="form-select" name="status" id="status-filter"
+                onchange="this.form.submit()" style="width:auto; min-width:155px;">
+            <option value="" {% if not status_filter %}selected{% endif %}>All Statuses</option>
+            <option value="New" {% if status_filter == 'New' %}selected{% endif %}>New</option>
+            <option value="Assigned" {% if status_filter == 'Assigned' %}selected{% endif %}>Assigned</option>
+            <option value="In Progress" {% if status_filter == 'In Progress' %}selected{% endif %}>In Progress</option>
+            <option value="Resolved" {% if status_filter == 'Resolved' %}selected{% endif %}>Resolved</option>
+            <option value="Closed" {% if status_filter == 'Closed' %}selected{% endif %}>Closed</option>
+        </select>
 
-                    <select name="staff_id" required>
-                        {% for s in staff_list %}
-                        <option value="{{s.user_id}}">
-                            {{s.name}}
-                        </option>
-                        {% endfor %}
-                    </select>
-                    <input type="date" name="deadline" required>
+        <button type="submit" class="btn btn-secondary btn-sm">Search</button>
 
-                    <button class="btn btn-sm btn-success mt-1">
-                        Assign
-                    </button>
-                </form>
-                {% else %}
-                    Assigned
-                {% endif %}
-            </td>
+        {% if status_filter or search_q %}
+        <a href="/admin_panel" class="btn btn-secondary btn-sm">Clear</a>
+        {% endif %}
+    </form>
+</div>
 
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+{% if complaints|length == 0 %}
+<div class="card">
+    <div class="empty-state">
+        <div class="empty-icon">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        </div>
+        <h3>No Complaints Found</h3>
+        <p>
+            {% if status_filter or search_q %}No results match your filters.
+            {% else %}No complaints have been submitted yet.{% endif %}
+        </p>
+        {% if status_filter or search_q %}
+        <a href="/admin_panel" class="btn btn-secondary">View All</a>
+        {% endif %}
+    </div>
+</div>
 
-<a href="/dashboard" class="btn btn-secondary mt-3">Back</a>
+{% else %}
+<div class="card" style="overflow:hidden;">
+    <div class="table-container">
+        <table class="data-table" id="admin-complaints-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Raised By</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>SLA Deadline</th>
+                    <th>Details</th>
+                    <th>Assign / Re-assign</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in complaints %}
+                <tr class="{% if c.overdue %}row-overdue{% endif %}" id="complaint-row-{{ c.complaint_id }}">
+                    <td style="font-weight:600; color:var(--text-muted);">#{{ c.complaint_id }}</td>
+                    <td>
+                        <span style="font-weight:500;">{{ c.raised_by }}</span><br>
+                        <span style="font-size:11px; color:var(--text-muted);">{{ c.user_role }}</span>
+                    </td>
+                    <td>{{ c.category }}</td>
+                    <td>
+                        <span class="badge
+                            {% if c.priority == 'High' %}badge-high
+                            {% elif c.priority == 'Medium' %}badge-medium
+                            {% else %}badge-low{% endif %}">
+                            {{ c.priority }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge
+                            {% if c.status == 'New' %}badge-new
+                            {% elif c.status == 'Assigned' %}badge-assigned
+                            {% elif c.status == 'In Progress' %}badge-progress
+                            {% elif c.status == 'Resolved' %}badge-resolved
+                            {% else %}badge-closed{% endif %}">
+                            {{ c.status }}
+                        </span>
+                        {% if c.overdue %}
+                        <br><span class="badge badge-overdue" style="margin-top:4px;">Overdue</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:12px;">
+                        {% if c.sla_deadline %}
+                            <span {% if c.overdue %}style="color:var(--danger);"{% endif %}>
+                                {{ c.sla_deadline | fmt_date }}
+                            </span>
+                        {% else %}
+                            <span style="color:var(--text-dim);">Not set</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="/complaint/{{ c.complaint_id }}" class="btn btn-sm btn-secondary"
+                           id="view-complaint-{{ c.complaint_id }}">
+                            View
+                        </a>
+                    </td>
+                    <td>
+                        {% if c.status in ('New', 'Assigned') %}
+                        <form method="POST" action="/assign_complaint/{{ c.complaint_id }}"
+                              class="assign-form" id="assign-form-{{ c.complaint_id }}">
+                            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                            <select name="staff_id" required class="form-select">
+                                <option value="" disabled selected>
+                                    {% if c.status == 'Assigned' %}Re-assign...{% else %}Select staff...{% endif %}
+                                </option>
+                                {% for s in staff_list %}
+                                <option value="{{ s.user_id }}">
+                                    {{ s.name }}{% if s.staff_type %} ({{ s.staff_type }}){% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <input type="date" name="deadline" required class="form-control"
+                                   min="{{ now.strftime('%Y-%m-%d') }}">
+                            <button type="submit" class="btn btn-sm btn-full
+                                {% if c.status == 'Assigned' %}btn-warning{% else %}btn-success{% endif %}">
+                                {% if c.status == 'Assigned' %}Re-assign{% else %}Assign{% endif %}
+                            </button>
+                        </form>
+                        {% elif c.status == 'Closed' %}
+                            <span style="color:var(--text-dim); font-size:12px;">Closed</span>
+                        {% elif c.status == 'In Progress' %}
+                            <span style="color:var(--text-muted); font-size:12px;">In Progress</span>
+                        {% elif c.status == 'Resolved' %}
+                            <span style="color:var(--success); font-size:12px;">Resolved</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="/admin_panel?page={{ page - 1 }}&status={{ status_filter }}&q={{ search_q }}"
+       class="page-btn">Prev</a>
+    {% else %}
+    <span class="page-btn disabled">Prev</span>
+    {% endif %}
+
+    {% for p in range(1, total_pages + 1) %}
+    {% if p == page %}
+    <span class="page-btn active">{{ p }}</span>
+    {% elif p <= 2 or p >= total_pages - 1 or (p >= page - 1 and p <= page + 1) %}
+    <a href="/admin_panel?page={{ p }}&status={{ status_filter }}&q={{ search_q }}"
+       class="page-btn">{{ p }}</a>
+    {% elif p == 3 or p == total_pages - 2 %}
+    <span class="page-info">...</span>
+    {% endif %}
+    {% endfor %}
+
+    {% if page < total_pages %}
+    <a href="/admin_panel?page={{ page + 1 }}&status={{ status_filter }}&q={{ search_q }}"
+       class="page-btn">Next</a>
+    {% else %}
+    <span class="page-btn disabled">Next</span>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endif %}
 
 {% endblock %}

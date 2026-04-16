@@ -1,0 +1,122 @@
+Test Case: Duplicate Registration
+Inputs used: irl.adityaroy@gmail.com
+Expected: Email already registered
+Actual: Email already registered!
+Status: PASS
+----------------------------------------
+Test Case: Valid Login Student
+Inputs used: irl.adityaroy@gmail.com
+Expected: /dashboard url
+Actual: http://127.0.0.1:5000/dashboard
+Status: PASS
+----------------------------------------
+Test Case: Valid Login Admin
+Inputs used: kre8xofficial@gmail.com
+Expected: Admin Panel visible
+Actual: Admin Panel
+Status: PASS
+----------------------------------------
+Test Case: Valid Login Staff
+Inputs used: micodeaction@gmail.com
+Expected: My Assignments visible
+Actual: My Assignments
+Status: PASS
+----------------------------------------
+Test Case: Invalid Login Password
+Inputs used: WrongPassword!23
+Expected: Invalid email or password
+Actual: Invalid email or password!
+Status: PASS
+----------------------------------------
+Test Case: Empty Login Fields
+Inputs used: none
+Expected: True
+Actual: True
+Status: PASS
+----------------------------------------
+Test Case: Unauthorized Admin Access
+Inputs used: Student access to Admin
+Expected: Access Denied
+Actual: Access Denied! Admin only.
+Status: PASS
+----------------------------------------
+Test Case: Unauthorized Staff Access
+Inputs used: Student access to Staff
+Expected: Access Denied
+Actual: Access Denied! Staff only.
+Status: PASS
+----------------------------------------
+Test Case: Direct URL without Login
+Inputs used: /submit_complaint
+Expected: Redirects to /login
+Actual: http://127.0.0.1:5000/login
+Status: PASS
+----------------------------------------
+Test Case: Student Complaint Submission
+Inputs used: IT Services
+Expected: Complaint submitted successfully
+Actual: Error: TimeoutException - Message: 
+
+Status: FAIL
+----------------------------------------
+Test Case: Multiple Complaint Submission
+Inputs used: Electrical
+Expected: Complaint submitted successfully
+Actual: Error: TimeoutException - Message: 
+
+Status: FAIL
+----------------------------------------
+Test Case: Complaint Form Validation
+Inputs used: Empty Description
+Expected: True
+Actual: False
+Status: PASS
+----------------------------------------
+Test Case: Navigation Links
+Inputs used: Click My Complaints
+Expected: /my_complaints
+Actual: http://127.0.0.1:5000/my_complaints
+Status: PASS
+----------------------------------------
+Test Case: Admin Assignment
+Inputs used: Valid Deadline
+Expected: Assigned
+Actual: No complaints to assign
+Status: PASS
+----------------------------------------
+Test Case: Admin Invalid Deadline
+Inputs used: Past date
+Expected: SLA deadline cannot be in the past!
+Actual: SLA deadline cannot be in the past!
+Status: PASS
+----------------------------------------
+Test Case: Staff Status Update
+Inputs used: In Progress
+Expected: updated
+Actual: updated
+Status: PASS
+----------------------------------------
+Test Case: Logout Functionality
+Inputs used: Hit /logout
+Expected: Redirects to login
+Actual: http://127.0.0.1:5000/login
+Status: PASS
+----------------------------------------
+Test Case: Session Persistence
+Inputs used: Refresh Page
+Expected: Stays on /my_complaints
+Actual: http://127.0.0.1:5000/my_complaints
+Status: PASS
+----------------------------------------
+Test Case: Notification Link Visibility
+Inputs used: Check Sidebar
+Expected: True
+Actual: True
+Status: PASS
+----------------------------------------
+Test Case: Invalid Email Format
+Inputs used: No at symbol
+Expected: True
+Actual: True
+Status: PASS
+----------------------------------------

@@ -1,26 +1,209 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Campus Complaint Portal</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-          rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Campus Complaint and Service Request Portal. Submit, track and manage campus complaints efficiently.">
+    <title>{% block title %}Campus Complaint Portal{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+<body>
 
-<body class="bg-light">
+{% if session.get('user_id') %}
 
-<nav class="navbar navbar-dark bg-primary px-4">
-    <span class="navbar-brand fw-bold">
-        Campus Complaint & Service Portal
-    </span>
+<button class="hamburger" id="hamburger-btn" aria-label="Open navigation">
+    <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
 
-    {% if session.get("user_id") %}
-        <a href="/logout" class="btn btn-light btn-sm">Logout</a>
-    {% endif %}
-</nav>
+<div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-logo">
+            <div class="logo-icon">CP</div>
+            <h2>Campus Portal</h2>
+            <p>Complaint and Service System</p>
+        </div>
 
-<div class="container mt-4">
-    {% block content %}{% endblock %}
+        <nav class="sidebar-nav">
+            <div class="nav-section-label">Main</div>
+
+            <a href="/dashboard" class="nav-item {% if request.path == '/dashboard' %}active{% endif %}" id="nav-dashboard">
+                <span class="nav-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                </span>
+                Dashboard
+            </a>
+
+            {% if session.get('role') in ['student', 'faculty'] %}
+            <a href="/submit_complaint" class="nav-item {% if request.path == '/submit_complaint' %}active{% endif %}" id="nav-submit">
+                <span class="nav-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                </span>
+                Submit Complaint
+            </a>
+            <a href="/my_complaints" class="nav-item {% if request.path == '/my_complaints' %}active{% endif %}" id="nav-my-complaints">
+                <span class="nav-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10,9 9,9 8,9"/></svg>
+                </span>
+                My Complaints
+            </a>
+            {% endif %}
+
+            {% if session.get('role') == 'admin' %}
+            <div class="nav-section-label">Admin</div>
+            <a href="/admin_panel" class="nav-item {% if request.path == '/admin_panel' %}active{% endif %}" id="nav-admin">
+                <span class="nav-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+                </span>
+                Admin Panel
+            </a>
+            <a href="/reports" class="nav-item {% if request.path == '/reports' %}active{% endif %}" id="nav-reports">
+                <span class="nav-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </span>
+                Reports
+            </a>
+            <a href="/audit_logs" class="nav-item {% if request.path == '/audit_logs' %}active{% endif %}" id="nav-audit">
+                <span class="nav-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </span>
+                Audit Logs
+            </a>
+            {% endif %}
+
+            {% if session.get('role') == 'staff' %}
+            <div class="nav-section-label">Staff</div>
+            <a href="/staff_panel" class="nav-item {% if request.path == '/staff_panel' %}active{% endif %}" id="nav-staff">
+                <span class="nav-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M4.22 4.22l2.83 2.83m9.9 9.9 2.83 2.83M1 12h4m14 0h4M4.22 19.78l2.83-2.83m9.9-9.9 2.83-2.83"/></svg>
+                </span>
+                My Assignments
+            </a>
+            {% endif %}
+
+            <div class="nav-section-label">Account</div>
+            <a href="/notifications" class="nav-item {% if request.path == '/notifications' %}active{% endif %}" id="nav-notifications">
+                <span class="nav-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                </span>
+                Notifications
+                {% if unread_count > 0 %}
+                <span class="nav-badge">{{ unread_count }}</span>
+                {% endif %}
+            </a>
+            <a href="/logout" class="nav-item" id="nav-logout">
+                <span class="nav-icon">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                </span>
+                Logout
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <div class="user-avatar">{{ session.get('name', 'U')[0].upper() }}</div>
+                <div class="user-info">
+                    <div class="user-name">{{ session.get('name', 'User') }}</div>
+                    <div class="user-role">{{ session.get('role', '') }}</div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+                <p>{% block page_subtitle %}Welcome to Campus Portal{% endblock %}</p>
+            </div>
+            <div class="topbar-right">
+                <a href="/notifications" class="topbar-notif" title="Notifications" id="topbar-notif-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    {% if unread_count > 0 %}<span class="notif-dot"></span>{% endif %}
+                </a>
+            </div>
+        </header>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-container">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {% if category == 'success' %}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {% elif category == 'error' %}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                {% else %}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                {% endif %}
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <main class="page-content">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
 </div>
 
+{% else %}
+{% block auth_content %}{% endblock %}
+{% endif %}
+
+<script>
+(function() {
+    var alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(a) {
+        setTimeout(function() {
+            a.style.opacity = '0';
+            a.style.transform = 'translateY(-6px)';
+            a.style.transition = 'all 0.35s ease';
+            setTimeout(function() { if (a.parentNode) a.parentNode.removeChild(a); }, 360);
+        }, 4500);
+    });
+
+    var hamburger = document.getElementById('hamburger-btn');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('sidebar-overlay');
+
+    if (hamburger && sidebar && overlay) {
+        hamburger.addEventListener('click', function() {
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('visible');
+        });
+        overlay.addEventListener('click', function() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('visible');
+        });
+    }
+
+    var logoutLink = document.getElementById('nav-logout');
+    if (logoutLink) {
+        logoutLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('Are you sure you want to logout?')) {
+                window.location.href = '/logout';
+            }
+        });
+    }
+
+    document.querySelectorAll('.submit-once').forEach(function(form) {
+        form.addEventListener('submit', function() {
+            var btn = form.querySelector('[type="submit"]');
+            if (btn) {
+                btn.classList.add('loading');
+                btn.disabled = true;
+            }
+        });
+    });
+})();
+</script>
+
+{% block scripts %}{% endblock %}
 </body>
 </html>

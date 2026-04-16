@@ -1,50 +1,97 @@
 {% extends "base.html" %}
+
+{% block title %}My Complaints — Campus Portal{% endblock %}
+{% block page_title %}My Complaints{% endblock %}
+{% block page_subtitle %}Track all complaints you have submitted{% endblock %}
+
 {% block content %}
 
-<h3>My Complaints</h3>
-<hr>
+<div class="page-header">
+    <div>
+        <h2 class="page-title">My Complaints</h2>
+        <p class="page-subtitle">{{ complaints|length }} complaint{{ 's' if complaints|length != 1 }}</p>
+    </div>
+    <a href="/submit_complaint" class="btn btn-primary" id="btn-new-complaint">
+        New Complaint
+    </a>
+</div>
 
 {% if complaints|length == 0 %}
-    <p>No complaints submitted yet.</p>
+<div class="card">
+    <div class="empty-state">
+        <div class="empty-icon">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>
+        </div>
+        <h3>No Complaints Yet</h3>
+        <p>You have not submitted any complaints so far.</p>
+        <a href="/submit_complaint" class="btn btn-primary">Submit Your First Complaint</a>
+    </div>
+</div>
 {% else %}
-
-<table class="table table-bordered table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>Category</th>
-            <th>Priority</th>
-            <th>Status</th>
-            <th>Details</th>
-            <th>Date</th>
-        </tr>
-    </thead>
-
-    <tbody>
-        {% for c in complaints %}
-        <tr>
-            <td>{{c.complaint_id}}</td>
-            <td>{{c.category}}</td>
-            <td>{{c.priority}}</td>
-
-            <td>
-                <span class="badge bg-info">{{c.status}}</span>
-            </td>
-
-            <td>
-                <a href="/complaint/{{c.complaint_id}}" class="btn btn-sm btn-primary">
-                    View Details
-                </a>
-            </td>
-
-            <td>{{c.created_at}}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-
+<div class="card" style="overflow:hidden;">
+    <div class="table-container">
+        <table class="data-table" id="complaints-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Category</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>SLA Deadline</th>
+                    <th>Submitted</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in complaints %}
+                <tr class="{% if c.overdue %}row-overdue{% endif %}" id="row-{{ c.complaint_id }}">
+                    <td style="font-weight:600; color:var(--text-muted);">#{{ c.complaint_id }}</td>
+                    <td>{{ c.category }}</td>
+                    <td>
+                        <span class="badge
+                            {% if c.priority == 'High' %}badge-high
+                            {% elif c.priority == 'Medium' %}badge-medium
+                            {% else %}badge-low{% endif %}">
+                            {{ c.priority }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge
+                            {% if c.status == 'New' %}badge-new
+                            {% elif c.status == 'Assigned' %}badge-assigned
+                            {% elif c.status == 'In Progress' %}badge-progress
+                            {% elif c.status == 'Resolved' %}badge-resolved
+                            {% else %}badge-closed{% endif %}">
+                            {{ c.status }}
+                        </span>
+                        {% if c.overdue %}
+                        <span class="badge badge-overdue" style="margin-left:4px;">Overdue</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if c.sla_deadline %}
+                            <span style="font-size:12px; {% if c.overdue %}color:var(--danger);{% endif %}">
+                                {{ c.sla_deadline | fmt_date }}
+                            </span>
+                        {% else %}
+                            <span style="color:var(--text-dim); font-size:12px;">Not set</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:12px; color:var(--text-muted);">
+                        {{ c.created_at | fmt_date }}
+                    </td>
+                    <td>
+                        <a href="/complaint/{{ c.complaint_id }}" class="btn btn-sm btn-secondary"
+                           id="view-{{ c.complaint_id }}">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endif %}
-
-<a href="/dashboard" class="btn btn-secondary mt-3">Back</a>
 
 {% endblock %}

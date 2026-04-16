@@ -1,23 +1,57 @@
 {% extends "base.html" %}
+
+{% block title %}Notifications — Campus Portal{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+{% block page_subtitle %}Stay updated on your complaints{% endblock %}
+
 {% block content %}
 
-<h3>Notifications</h3>
-<hr>
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Notifications</h2>
+        <p class="page-subtitle">{{ notes|length }} notification{{ 's' if notes|length != 1 }}</p>
+    </div>
+</div>
 
 {% if notes|length == 0 %}
-    <p>No notifications yet.</p>
+<div class="card">
+    <div class="empty-state">
+        <div class="empty-icon">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+        <h3>All Caught Up</h3>
+        <p>You have no notifications at the moment.</p>
+    </div>
+</div>
 {% else %}
-<ul class="list-group">
+<div class="notif-list" id="notifications-list">
     {% for n in notes %}
-    <li class="list-group-item">
-        {{n.message}}
-        <br>
-        <small class="text-muted">{{n.created_at}}</small>
-    </li>
+    <div class="notif-item {% if not n.is_read %}unread{% endif %}" id="notif-{{ n.notification_id }}">
+        <div class="notif-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                {% if 'assigned' in n.message.lower() %}
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                {% elif 'resolved' in n.message.lower() %}
+                <polyline points="20 6 9 17 4 12"/>
+                {% elif 'closed' in n.message.lower() %}
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                {% elif 'progress' in n.message.lower() %}
+                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                {% else %}
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                {% endif %}
+            </svg>
+        </div>
+        <div class="notif-body" style="flex:1;">
+            <div class="notif-msg">{{ n.message }}</div>
+            <div class="notif-time">{{ n.created_at | fmt_datetime }}</div>
+        </div>
+        {% if not n.is_read %}
+        <span style="width:7px; height:7px; border-radius:50%; background:var(--primary); flex-shrink:0; margin-top:6px;"></span>
+        {% endif %}
+    </div>
     {% endfor %}
-</ul>
+</div>
 {% endif %}
-
-<a href="/dashboard" class="btn btn-secondary mt-3">Back</a>
 
 {% endblock %}

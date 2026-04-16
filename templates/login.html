@@ -1,22 +1,80 @@
 {% extends "base.html" %}
-{% block content %}
 
-<div class="card shadow-lg p-4 mx-auto" style="max-width:400px;">
-    <h3 class="text-center mb-3">Login</h3>
+{% block auth_content %}
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-logo">
+            <div class="logo-mark">CP</div>
+            <h2>Welcome Back</h2>
+            <p>Sign in to your Campus Portal account</p>
+        </div>
 
-    <form method="POST">
-        <input class="form-control mb-3" type="email" name="email"
-               placeholder="Enter Email" required>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="auth-flash">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {% if category == 'success' %}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                {% elif category == 'error' %}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                {% else %}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                {% endif %}
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
 
-        <input class="form-control mb-3" type="password" name="password"
-               placeholder="Enter Password" required>
+        <form method="POST" id="login-form" class="submit-once">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
-        <button class="btn btn-primary w-100">Login</button>
-    </form>
+            <div class="form-group">
+                <label class="form-label" for="login-email">Email Address</label>
+                <input class="form-control" type="email" id="login-email" name="email"
+                       placeholder="you@university.edu" required autocomplete="email">
+            </div>
 
-    <p class="text-center mt-3">
-        New user? <a href="/register">Register</a>
-    </p>
+            <div class="form-group">
+                <label class="form-label" for="login-password">Password</label>
+                <input class="form-control" type="password" id="login-password" name="password"
+                       placeholder="Enter your password" required autocomplete="current-password">
+            </div>
+
+            <div style="margin-top:24px;">
+                <button type="submit" class="btn btn-primary btn-full btn-lg" id="login-btn">
+                    <span class="btn-spinner"></span>
+                    <span class="btn-text">Sign In</span>
+                </button>
+            </div>
+        </form>
+
+        <p style="text-align:center; margin-top:20px; font-size:13px; color:var(--text-muted);">
+            New user? <a href="/register" style="color:var(--accent); font-weight:600;">Create Account</a>
+        </p>
+    </div>
 </div>
 
+<script>
+(function() {
+    var alerts = document.querySelectorAll('.alert');
+    alerts.forEach(function(a) {
+        setTimeout(function() {
+            a.style.opacity = '0';
+            a.style.transition = 'opacity 0.35s ease';
+            setTimeout(function() { if (a.parentNode) a.parentNode.removeChild(a); }, 360);
+        }, 4500);
+    });
+
+    var form = document.getElementById('login-form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            var btn = document.getElementById('login-btn');
+            if (btn) { btn.classList.add('loading'); btn.disabled = true; }
+        });
+    }
+})();
+</script>
 {% endblock %}

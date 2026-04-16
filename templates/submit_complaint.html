@@ -1,33 +1,121 @@
 {% extends "base.html" %}
+
+{% block title %}Submit Complaint — Campus Portal{% endblock %}
+{% block page_title %}Submit Complaint{% endblock %}
+{% block page_subtitle %}Report an issue or request a campus service{% endblock %}
+
 {% block content %}
 
-<div class="card shadow-lg p-4 mx-auto" style="max-width:600px;">
-    <h3 class="text-center">Raise a Complaint</h3>
+<div class="form-card card">
+    <div class="card-header">
+        <span>New Complaint Form</span>
+    </div>
+    <div class="card-body">
+        <form method="POST" id="complaint-form" class="submit-once">
+            <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
-    <form method="POST">
+            <div class="form-group">
+                <label class="form-label" for="c-category">Category *</label>
+                <select class="form-select" id="c-category" name="category" required
+                        onchange="handleCategory(this.value)">
+                    <option value="" disabled selected>Select a category</option>
+                    <option value="Hostel">Hostel</option>
+                    <option value="Academic Infrastructure">Academic Infrastructure</option>
+                    <option value="IT Services">IT Services</option>
+                    <option value="Electrical">Electrical</option>
+                    <option value="Cleaning">Cleaning and Sanitation</option>
+                    <option value="Administration">Administration</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
 
-        <label class="mt-2">Category</label>
-        <select name="category" class="form-control" required>
-            <option>Hostel</option>
-            <option>Academic Infrastructure</option>
-            <option>IT Services</option>
-            <option>Administration</option>
-        </select>
+            <div class="dynamic-section" id="hostel-fields">
+                <div class="dynamic-section-title">Hostel Details</div>
+                <div class="form-group">
+                    <label class="form-label" for="c-room">Room Number</label>
+                    <input class="form-control" type="text" id="c-room" name="room_number"
+                           placeholder="e.g. 204, A-12">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="c-block">Block Letter</label>
+                    <input class="form-control" type="text" id="c-block" name="block_letter"
+                           placeholder="e.g. A, B, C">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="c-hostel-type">Hostel Type</label>
+                    <select class="form-select" id="c-hostel-type" name="hostel_type">
+                        <option value="">Select</option>
+                        <option value="MH">MH - Men's Hostel</option>
+                        <option value="LH">LH - Ladies' Hostel</option>
+                    </select>
+                </div>
+            </div>
 
-        <label class="mt-3">Priority</label>
-        <select name="priority" class="form-control" required>
-            <option>Low</option>
-            <option selected>Medium</option>
-            <option>High</option>
-        </select>
+            <div class="dynamic-section" id="academic-fields">
+                <div class="dynamic-section-title">Academic Venue Details</div>
+                <div class="form-group">
+                    <label class="form-label" for="c-building">Building Name</label>
+                    <input class="form-control" type="text" id="c-building" name="building_name"
+                           placeholder="e.g. Main Block, Science Block">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="c-acad-room">Room or Lab Number</label>
+                    <input class="form-control" type="text" id="c-acad-room" name="academic_room"
+                           placeholder="e.g. 101, Lab-3">
+                </div>
+            </div>
 
-        <label class="mt-3">Description</label>
-        <textarea name="description" class="form-control" rows="4" required></textarea>
+            <div class="form-group" style="margin-top:16px;">
+                <label class="form-label" for="c-priority">Priority Level *</label>
+                <select class="form-select" id="c-priority" name="priority" required>
+                    <option value="Low">Low - Minor inconvenience</option>
+                    <option value="Medium" selected>Medium - Needs attention</option>
+                    <option value="High">High - Urgent issue</option>
+                </select>
+            </div>
 
-        <button class="btn btn-success w-100 mt-4">
-            Submit Complaint
-        </button>
-    </form>
+            <div class="form-group">
+                <label class="form-label" for="c-desc">Description *</label>
+                <textarea class="form-control" id="c-desc" name="description" rows="5"
+                          placeholder="Describe the issue in detail (minimum 10 characters)..."
+                          required minlength="10"></textarea>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:8px; flex-wrap:wrap;">
+                <button type="submit" class="btn btn-primary btn-lg" id="submit-btn" style="flex:1; min-width:180px;">
+                    <span class="btn-spinner"></span>
+                    <span class="btn-text">Submit Complaint</span>
+                </button>
+                <a href="/my_complaints" class="btn btn-secondary btn-lg">Cancel</a>
+            </div>
+
+        </form>
+    </div>
 </div>
+
+<script>
+function handleCategory(val) {
+    var hostelFields = document.getElementById('hostel-fields');
+    var academicFields = document.getElementById('academic-fields');
+    hostelFields.classList.remove('visible');
+    academicFields.classList.remove('visible');
+
+    if (val === 'Hostel') {
+        hostelFields.classList.add('visible');
+    } else if (val === 'Academic Infrastructure') {
+        academicFields.classList.add('visible');
+    }
+}
+
+(function() {
+    var form = document.getElementById('complaint-form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            var btn = document.getElementById('submit-btn');
+            if (btn) { btn.classList.add('loading'); btn.disabled = true; }
+        });
+    }
+})();
+</script>
 
 {% endblock %}

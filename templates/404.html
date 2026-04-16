@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if error_code %}{{ error_code }}{% else %}404{% endif %} — Campus Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<div class="error-page"
+     style="background: var(--bg-main);">
+    <div class="error-code">{% if error_code %}{{ error_code }}{% else %}404{% endif %}</div>
+    <h2>{% if error_code == 500 %}Internal Server Error{% else %}Page Not Found{% endif %}</h2>
+    <p>
+        {% if error_code == 500 %}
+        Something went wrong on our end. Please try again later.
+        {% else %}
+        The page you are looking for does not exist or has been moved.
+        {% endif %}
+    </p>
+    <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:8px;">
+        <a href="/dashboard" class="btn btn-primary">Go to Dashboard</a>
+        <a href="javascript:history.back()" class="btn btn-secondary">Go Back</a>
+    </div>
+</div>
+</body>
+</html>

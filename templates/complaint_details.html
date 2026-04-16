@@ -1,46 +1,125 @@
 {% extends "base.html" %}
+
+{% block title %}Complaint #{{ complaint.complaint_id }} — Campus Portal{% endblock %}
+{% block page_title %}Complaint #{{ complaint.complaint_id }}{% endblock %}
+{% block page_subtitle %}{{ complaint.category }}, {{ complaint.status }}{% endblock %}
+
 {% block content %}
 
-<div class="card shadow-lg p-4 mx-auto" style="max-width:750px;">
-
-    <h3 class="text-center mb-3">Complaint Details</h3>
-
-    <p><b>ID:</b> {{complaint.complaint_id}}</p>
-    <p><b>Raised By:</b> {{complaint.raised_by}} ({{complaint.user_role}})</p>
-
-    <p><b>Category:</b> {{complaint.category}}</p>
-    <p><b>Priority:</b> {{complaint.priority}}</p>
-
-    <p><b>Status:</b>
-        <span class="badge bg-info">{{complaint.status}}</span>
-    </p>
-
-    <p><b>SLA Deadline:</b>
-        {% if complaint.sla_deadline %}
-            {{complaint.sla_deadline}}
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Complaint Details</h2>
+        <p class="page-subtitle">Submitted by {{ complaint.raised_by }} ({{ complaint.user_role }})</p>
+    </div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        {% if session.get('role') == 'admin' %}
+        <a href="/admin_panel" class="btn btn-secondary">Back to Admin Panel</a>
+        {% elif session.get('role') == 'staff' %}
+        <a href="/staff_panel" class="btn btn-secondary">Back to Assignments</a>
         {% else %}
-            Not Assigned Yet
+        <a href="/my_complaints" class="btn btn-secondary">Back to My Complaints</a>
         {% endif %}
-    </p>
+    </div>
+</div>
 
-    <hr>
+<div class="detail-card card">
+    <div class="card-header">
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <span style="font-weight:700;">#{{ complaint.complaint_id }}</span>
+            <span class="badge
+                {% if complaint.status == 'New' %}badge-new
+                {% elif complaint.status == 'Assigned' %}badge-assigned
+                {% elif complaint.status == 'In Progress' %}badge-progress
+                {% elif complaint.status == 'Resolved' %}badge-resolved
+                {% else %}badge-closed{% endif %}">
+                {{ complaint.status }}
+            </span>
+            <span class="badge
+                {% if complaint.priority == 'High' %}badge-high
+                {% elif complaint.priority == 'Medium' %}badge-medium
+                {% else %}badge-low{% endif %}">
+                {{ complaint.priority }}
+            </span>
+        </div>
+        <span style="font-size:12px; color:var(--text-muted);">
+            {{ complaint.created_at | fmt_datetime }}
+        </span>
+    </div>
 
-    <h5>Description:</h5>
-    <p>{{complaint.description}}</p>
+    <div class="card-body">
+        <div class="detail-row">
+            <div class="detail-label">Category</div>
+            <div class="detail-value">{{ complaint.category }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Raised By</div>
+            <div class="detail-value">{{ complaint.raised_by }} <span style="color:var(--text-muted); font-size:12px;">({{ complaint.user_role }})</span></div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Priority</div>
+            <div class="detail-value">{{ complaint.priority }}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Status</div>
+            <div class="detail-value">{{ complaint.status }}</div>
+        </div>
+        {% if complaint.sla_deadline %}
+        <div class="detail-row">
+            <div class="detail-label">SLA Deadline</div>
+            <div class="detail-value" {% if complaint.overdue is defined and complaint.overdue %}style="color:var(--danger);"{% endif %}>
+                {{ complaint.sla_deadline | fmt_date }}
+            </div>
+        </div>
+        {% endif %}
 
-    <hr>
+        {% if complaint.category == 'Hostel' %}
+        {% if complaint.room_number %}
+        <div class="detail-row">
+            <div class="detail-label">Room Number</div>
+            <div class="detail-value">{{ complaint.room_number }}</div>
+        </div>
+        {% endif %}
+        {% if complaint.block_letter %}
+        <div class="detail-row">
+            <div class="detail-label">Block</div>
+            <div class="detail-value">{{ complaint.block_letter }}</div>
+        </div>
+        {% endif %}
+        {% if complaint.hostel_type %}
+        <div class="detail-row">
+            <div class="detail-label">Hostel Type</div>
+            <div class="detail-value">{{ 'Men\'s Hostel (MH)' if complaint.hostel_type == 'MH' else 'Ladies\' Hostel (LH)' }}</div>
+        </div>
+        {% endif %}
+        {% endif %}
 
-    <h5>Staff Remarks:</h5>
-    {% if complaint.remarks %}
-        <p class="text-success">{{complaint.remarks}}</p>
-    {% else %}
-        <p class="text-muted">No remarks yet.</p>
-    {% endif %}
+        {% if complaint.category == 'Academic Infrastructure' %}
+        {% if complaint.building_name %}
+        <div class="detail-row">
+            <div class="detail-label">Building</div>
+            <div class="detail-value">{{ complaint.building_name }}</div>
+        </div>
+        {% endif %}
+        {% if complaint.room_number %}
+        <div class="detail-row">
+            <div class="detail-label">Room / Lab</div>
+            <div class="detail-value">{{ complaint.room_number }}</div>
+        </div>
+        {% endif %}
+        {% endif %}
 
-    <a href="/dashboard" class="btn btn-secondary mt-3">
-        Back
-    </a>
+        <div style="margin-top:16px;">
+            <div class="detail-label" style="margin-bottom:8px;">Description</div>
+            <div class="detail-desc">{{ complaint.description }}</div>
+        </div>
 
+        {% if complaint.remarks %}
+        <div style="margin-top:16px;">
+            <div class="detail-label" style="margin-bottom:8px;">Staff Remarks</div>
+            <div class="detail-remarks">{{ complaint.remarks }}</div>
+        </div>
+        {% endif %}
+    </div>
 </div>
 
 {% endblock %}
